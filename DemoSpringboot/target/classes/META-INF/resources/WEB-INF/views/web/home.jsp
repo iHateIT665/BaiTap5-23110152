@@ -2,15 +2,14 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Quản lý Category</title>
+    <title>Trang chủ xem phim</title>
     <jsp:include page="/WEB-INF/views/common/head.jsp" />
 </head>
 <body>
-    <jsp:include page="/WEB-INF/views/admin/fragments/header.jsp" />
+    <jsp:include page="/WEB-INF/views/web/fragments/header.jsp" />
 
-    <div class="container mt-4">
-        <h2>Danh sách Category</h2>
-        ... (Code bảng của bạn) ...
+    <div class="container">
+        <h1>Chào mừng bạn đến với web xem phim!</h1>
     </div>
 
     <jsp:include page="/WEB-INF/views/common/footer.jsp" />
