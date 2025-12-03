@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{admin/layout}">
+<head><title>Quản lý User</title></head>
+<body>
+    <section layout:fragment="content">
+        <div class="card mt-4">
+            <div class="card-header bg-success text-white"><h4>Danh sách User</h4></div>
+            <div class="card-body">
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <form action="/admin/users" method="get">
+                            <div class="input-group">
+                                <input type="text" class="form-control" name="keyword" th:value="${keyword}" placeholder="Tìm theo Username hoặc Tên...">
+                                <button class="btn btn-primary">Tìm kiếm</button>
+                            </div>
+                        </form>
+                    </div>
+                    <div class="col-md-6 text-end">
+                        <a href="/admin/users/add" class="btn btn-success">Thêm User</a>
+                    </div>
+                </div>
+
+                <table class="table table-bordered">
+                    <thead><tr><th>Avatar</th><th>Username</th><th>Họ tên</th><th>Email</th><th>Vai trò</th><th>Hành động</th></tr></thead>
+                    <tbody>
+                        <tr th:each="user : ${userPage.content}">
+                            <td><img th:if="${user.images != null}" th:src="@{'/uploads/' + ${user.images}}" width="50" class="rounded-circle"></td>
+                            <td th:text="${user.username}"></td>
+                            <td th:text="${user.fullname}"></td>
+                            <td th:text="${user.email}"></td>
+                            <td><span th:text="${user.admin ? 'Admin' : 'User'}" class="badge bg-info text-dark"></span></td>
+                            <td>
+                                <a th:href="@{/admin/users/edit/{id}(id=${user.username})}" class="btn btn-warning btn-sm">Sửa</a>
+                                <a th:href="@{/admin/users/delete/{id}(id=${user.username})}" class="btn btn-danger btn-sm" onclick="return confirm('Xóa hả?')">Xóa</a>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+                </div>
+        </div>
+    </section>
+</body>
+</html>

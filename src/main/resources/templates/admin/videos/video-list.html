@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+	xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+	layout:decorate="~{admin/layout}">
+<head>
+<title>Quản lý Video</title>
+</head>
+<body>
+	<section layout:fragment="content">
+		<div class="card mt-4">
+			<div class="card-header bg-danger text-white">
+				<h4>Danh sách Video</h4>
+			</div>
+			<div class="card-body">
+				<a href="/admin/videos/add" class="btn btn-primary mb-3">Thêm
+					Video</a>
+				<table class="table table-bordered">
+					<thead>
+						<tr>
+							<th>Poster</th>
+							<th>Tiêu đề</th>
+							<th>Mô tả</th>
+							<th>Category</th>
+							<th>Xem thử (Demo)</th>
+							<th>Hành động</th>
+						</tr>
+					</thead>
+					<tbody>
+						<tr th:each="item : ${videos}">
+							<td><img th:if="${item.poster != null}"
+								th:src="@{'/uploads/' + ${item.poster}}" width="80"></td>
+
+							<td th:text="${item.title}"></td>
+							<td th:text="${item.description}"></td>
+							<td
+								th:text="${item.category != null ? item.category.categoryName : 'Chưa phân loại'}"></td>
+
+							<td>
+								<div th:if="${item.videoCode != null && item.videoCode != ''}">
+									<iframe width="200" height="113"
+										th:src="@{'https://www.youtube.com/embed/' + ${item.videoCode}}"
+										title="YouTube video player" frameborder="0" allowfullscreen>
+									</iframe>
+								</div> <span th:if="${item.videoCode == null || item.videoCode == ''}">Chưa
+									có link</span>
+							</td>
+
+							<td><a
+								th:href="@{/admin/videos/edit/{id}(id=${item.videoId})}"
+								class="btn btn-warning btn-sm">Sửa</a> <a
+								th:href="@{/admin/videos/delete/{id}(id=${item.videoId})}"
+								class="btn btn-danger btn-sm">Xóa</a></td>
+						</tr>
+					</tbody>
+				</table>
+				<table class="table table-bordered">
+					<thead>
+						<tr>
+							<th>Poster</th>
+							<th>Tiêu đề</th>
+							<th>Mô tả</th>
+							<th>Category</th>
+							<th>Hành động</th>
+						</tr>
+					</thead>
+					<tbody>
+						<tr th:each="item : ${videos}">
+							<td><img th:if="${item.poster != null}"
+								th:src="@{'/uploads/' + ${item.poster}}" width="80"></td>
+							<td th:text="${item.title}"></td>
+							<td th:text="${item.description}"></td>
+
+							<td
+								th:text="${item.category != null ? item.category.categoryName : 'Chưa phân loại'}"></td>
+
+							<td><a
+								th:href="@{/admin/videos/edit/{id}(id=${item.videoId})}"
+								class="btn btn-warning btn-sm">Sửa</a> <a
+								th:href="@{/admin/videos/delete/{id}(id=${item.videoId})}"
+								class="btn btn-danger btn-sm">Xóa</a></td>
+						</tr>
+					</tbody>
+				</table>
+			</div>
+		</div>
+	</section>
+</body>
+</html>

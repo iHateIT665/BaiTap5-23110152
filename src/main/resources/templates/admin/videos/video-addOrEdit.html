@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+	xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+	layout:decorate="~{admin/layout}">
+<head>
+<title>Cập nhật Video</title>
+</head>
+<body>
+	<section layout:fragment="content">
+		<div class="card mt-4 col-md-8 mx-auto">
+			<div class="card-header bg-info text-white">
+				<h4>Thông tin Video</h4>
+			</div>
+			<div class="card-body">
+				<form th:action="@{/admin/videos/saveOrUpdate}" method="POST"
+					th:object="${video}" enctype="multipart/form-data">
+
+					<div class="mb-3">
+						<label>Mã Video:</label> <input type="text" class="form-control"
+							th:field="*{videoId}" readonly>
+					</div>
+					<div class="mb-3">
+						<label>Mã Video (Youtube ID):</label> <input type="text"
+							class="form-control" th:field="*{videoCode}"
+							placeholder="Ví dụ: dQw4w9WgXcQ (Lấy từ link Youtube)" required>
+						<small class="text-muted">Nhập mã phía sau v= của link
+							Youtube.</small>
+					</div>
+
+					<div class="mb-3">
+						<label>Tiêu đề:</label> <input type="text" class="form-control"
+							th:field="*{title}" required>
+					</div>
+
+					<div class="mb-3">
+						<label>Mô tả:</label>
+						<textarea class="form-control" th:field="*{description}" rows="3"></textarea>
+					</div>
+
+					<div class="mb-3">
+						<label class="fw-bold">Thuộc Danh Mục:</label> <select
+							class="form-select" th:field="*{category}">
+							<option value="">-- Chọn danh mục --</option>
+							<option th:each="cate : ${categories}"
+								th:value="${cate.categoryId}" th:text="${cate.categoryName}"></option>
+						</select>
+					</div>
+
+					<div class="mb-3">
+						<label>Poster:</label> <input type="file" name="posterFile"
+							class="form-control">
+					</div>
+
+					<button type="submit" class="btn btn-success">Lưu lại</button>
+					<a href="/admin/videos" class="btn btn-secondary">Hủy</a>
+				</form>
+			</div>
+		</div>
+	</section>
+</body>
+</html>

@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+	xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+	layout:decorate="~{admin/layout}">
+
+<head>
+<title
+	th:text="${category.isEdit ? 'Chỉnh sửa Category' : 'Thêm mới Category'}"></title>
+</head>
+
+<body>
+	<section layout:fragment="content">
+
+		<div class="row justify-content-center mt-4">
+			<div class="col-md-8">
+				<div class="card shadow-sm">
+
+					<div class="card-header bg-primary text-white">
+						<h4 class="mb-0">
+							<i class="fa-solid fa-pen-to-square"></i> <span
+								th:text="${category.isEdit ? 'Chỉnh sửa Category' : 'Thêm mới Category'}"></span>
+						</h4>
+					</div>
+
+					<div class="card-body">
+						<form th:action="@{/admin/categories/saveOrUpdate}" method="POST"
+							th:object="${category}" enctype="multipart/form-data">
+
+							<input type="hidden" th:field="*{isEdit}"> <input
+								type="hidden" th:field="*{categoryId}">
+
+							<div class="mb-3">
+								<label class="form-label fw-bold">Tên Danh Mục:</label> <input
+									type="text" class="form-control" th:field="*{categoryName}"
+									required>
+							</div>
+							<div class="mb-3">
+								<label class="form-label fw-bold">Mã Danh Mục:</label> <input
+									type="text" class="form-control" th:field="*{categoryCode}"
+									required>
+							</div>
+
+							<div class="mb-3">
+								<label class="form-label fw-bold">Hình Ảnh:</label> <input
+									type="file" class="form-control" th:field="*{imageFile}">
+
+								<input type="hidden" th:field="*{images}">
+
+								<div class="mt-2"
+									th:if="${category.images != null && category.images != ''}">
+									<label>Ảnh hiện tại:</label> <br /> <img
+										th:src="@{'/uploads/' + ${category.images}}" width="100"
+										class="img-thumbnail">
+								</div>
+							</div>
+
+							<div class="mb-3">
+								<label class="form-label fw-bold">Trạng Thái:</label> <select
+									class="form-select" th:field="*{status}">
+									<option value="1">Hoạt động (Active)</option>
+									<option value="0">Khóa (Inactive)</option>
+								</select>
+							</div>
+
+							<div class="d-flex justify-content-end gap-2 mt-4">
+								<a href="/admin/categories" class="btn btn-secondary">Quay
+									lại</a>
+								<button type="submit" class="btn btn-success">Lưu lại</button>
+							</div>
+						</form>
+					</div>
+
+				</div>
+			</div>
+		</div>
+
+	</section>
+
+</body>
+</html>

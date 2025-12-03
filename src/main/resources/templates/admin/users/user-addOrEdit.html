@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{admin/layout}">
+<head><title>Cập nhật User</title></head>
+<body>
+    <section layout:fragment="content">
+        <div class="card mt-4 col-md-8 mx-auto">
+            <div class="card-header bg-info text-white"><h4>Thông tin User</h4></div>
+            <div class="card-body">
+                <form th:action="@{/admin/users/saveOrUpdate}" method="POST" th:object="${user}" enctype="multipart/form-data">
+                    
+                    <div class="mb-3">
+                        <label>Username:</label>
+                        <input type="text" class="form-control" th:field="*{username}" th:readonly="${isEdit}" required>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label>Mật khẩu:</label>
+                        <input type="password" class="form-control" th:field="*{password}" required>
+                    </div>
+
+                    <div class="mb-3">
+                        <label>Họ và tên:</label>
+                        <input type="text" class="form-control" th:field="*{fullname}">
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label>Email:</label>
+                        <input type="email" class="form-control" th:field="*{email}">
+                    </div>
+
+                    <div class="mb-3">
+                        <label>Avatar:</label>
+                        <input type="file" name="imageFile" class="form-control">
+                        <input type="hidden" th:field="*{images}"> </div>
+
+                    <div class="mb-3 form-check">
+                        <input type="checkbox" class="form-check-input" th:field="*{admin}">
+                        <label class="form-check-label">Là Admin?</label>
+                    </div>
+
+                    <button type="submit" class="btn btn-success">Lưu lại</button>
+                    <a href="/admin/users" class="btn btn-secondary">Hủy</a>
+                </form>
+            </div>
+        </div>
+    </section>
+</body>
+</html>
