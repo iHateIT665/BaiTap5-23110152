@@ -31,18 +31,18 @@ public class CategoryAPIController {
         return new ResponseEntity<>(new Response(true, "Thành công", categoryService.findAll()), HttpStatus.OK);
     }
 
-    // 2. Thêm mới Category (Có upload ảnh)
+    // 2. Thêm Category (Có upload ảnh)
     @PostMapping(path = "/addCategory", consumes = {"multipart/form-data"})
     public ResponseEntity<Response> addCategory(
-            @Validated @RequestParam("categoryName") String categoryName,
-            @Validated @RequestParam("categoryCode") String categoryCode,
+            @RequestParam("categoryName") String categoryName,
+            @RequestParam("categoryCode") String categoryCode,
             @RequestParam("status") int status,
-            @RequestParam("images") MultipartFile file) { // Lưu ý: key bên Postman phải là 'images'
+            @RequestParam(value = "icon", required = false) MultipartFile icon) { // Trong tài liệu là 'icon', project bạn là 'images'
 
-        // Check trùng tên (Optional)
+        // Kiểm tra trùng tên (Optional - như tài liệu)
         if (!categoryService.findByCategoryNameContaining(categoryName).isEmpty()) {
-             // Logic check trùng đơn giản, bạn có thể viết hàm findByCategoryName chính xác hơn
-             // return new ResponseEntity<>(new Response(false, "Tên Category đã tồn tại", null), HttpStatus.BAD_REQUEST);
+             // Logic check trùng đơn giản
+             // return new ResponseEntity<>(new Response(false, "Tên đã tồn tại", null), HttpStatus.BAD_REQUEST);
         }
 
         Category category = new Category();
@@ -50,14 +50,12 @@ public class CategoryAPIController {
         category.setCategoryCode(categoryCode);
         category.setStatus(status);
 
-        // Xử lý upload ảnh
-        if (!file.isEmpty()) {
+        // Xử lý file ảnh
+        if (icon != null && !icon.isEmpty()) {
             UUID uuid = UUID.randomUUID();
-            String uuString = uuid.toString();
-            // Lưu file vào folder uploads
-            storageService.store(file, storageService.getSorageFilename(file, uuString));
-            // Lưu tên file vào database
-            category.setImages(storageService.getSorageFilename(file, uuString));
+            String fileName = storageService.getSorageFilename(icon, uuid.toString());
+            storageService.store(icon, fileName);
+            category.setImages(fileName); // Entity của bạn tên là images
         }
 
         categoryService.save(category);
@@ -67,16 +65,15 @@ public class CategoryAPIController {
     // 3. Cập nhật Category
     @PutMapping(path = "/updateCategory", consumes = {"multipart/form-data"})
     public ResponseEntity<Response> updateCategory(
-            @Validated @RequestParam("categoryId") Long categoryId,
-            @Validated @RequestParam("categoryName") String categoryName,
-            @Validated @RequestParam("categoryCode") String categoryCode,
+            @RequestParam("categoryId") Long categoryId,
+            @RequestParam("categoryName") String categoryName,
+            @RequestParam("categoryCode") String categoryCode,
             @RequestParam("status") int status,
-            @RequestParam(value = "images", required = false) MultipartFile file) { // required=false vì update có thể không đổi ảnh
+            @RequestParam(value = "icon", required = false) MultipartFile icon) {
 
         Optional<Category> optCategory = categoryService.findById(categoryId);
-        
         if (optCategory.isEmpty()) {
-            return new ResponseEntity<>(new Response(false, "Không tìm thấy Category", null), HttpStatus.NOT_FOUND);
+            return new ResponseEntity<>(new Response(false, "Không tìm thấy Category", null), HttpStatus.BAD_REQUEST);
         }
 
         Category category = optCategory.get();
@@ -84,13 +81,11 @@ public class CategoryAPIController {
         category.setCategoryCode(categoryCode);
         category.setStatus(status);
 
-        // Nếu có chọn ảnh mới thì mới upload và thay đổi
-        if (file != null && !file.isEmpty()) {
+        if (icon != null && !icon.isEmpty()) {
             UUID uuid = UUID.randomUUID();
-            String uuString = uuid.toString();
-            
-            storageService.store(file, storageService.getSorageFilename(file, uuString));
-            category.setImages(storageService.getSorageFilename(file, uuString));
+            String fileName = storageService.getSorageFilename(icon, uuid.toString());
+            storageService.store(icon, fileName);
+            category.setImages(fileName);
         }
 
         categoryService.save(category);
@@ -99,17 +94,24 @@ public class CategoryAPIController {
 
     // 4. Xóa Category
     @DeleteMapping(path = "/deleteCategory")
-    public ResponseEntity<Response> deleteCategory(@Validated @RequestParam("categoryId") Long categoryId) {
+    public ResponseEntity<Response> deleteCategory(@RequestParam("categoryId") Long categoryId) {
         Optional<Category> optCategory = categoryService.findById(categoryId);
-
         if (optCategory.isEmpty()) {
-            return new ResponseEntity<>(new Response(false, "Không tìm thấy Category", null), HttpStatus.NOT_FOUND);
+            return new ResponseEntity<>(new Response(false, "Không tìm thấy Category", null), HttpStatus.BAD_REQUEST);
         }
-
-        // Có thể thêm logic xóa file ảnh trong thư mục uploads nếu muốn
-        // storageService.delete(optCategory.get().getImages());
-
+        
         categoryService.deleteById(categoryId);
-        return new ResponseEntity<>(new Response(true, "Xóa thành công", optCategory.get()), HttpStatus.OK);
+        return new ResponseEntity<>(new Response(true, "Xóa thành công", null), HttpStatus.OK);
+    }
+    
+    // 5. Lấy chi tiết 1 Category (Theo tài liệu)
+    @PostMapping(path = "/getCategory")
+    public ResponseEntity<Response> getCategory(@RequestParam("id") Long id) {
+        Optional<Category> category = categoryService.findById(id);
+        if (category.isPresent()) {
+            return new ResponseEntity<>(new Response(true, "Thành công", category.get()), HttpStatus.OK);
+        } else {
+            return new ResponseEntity<>(new Response(false, "Thất bại", null), HttpStatus.NOT_FOUND);
+        }
     }
 }

@@ -6,6 +6,7 @@ import lombok.*;
 
 @AllArgsConstructor
 @NoArgsConstructor
+@Data // Tự động sinh Getter, Setter, toString, equals, hashCode
 @Entity
 @Table(name = "videos")
 public class Video implements Serializable {
@@ -26,44 +27,19 @@ public class Video implements Serializable {
     private String description;
 
     @Column(name = "views")
-    private int views;
+    private int views; // Có thể đổi thành Integer nếu muốn chấp nhận giá trị null
 
     @Column(name = "active")
-    private boolean active;
+    private boolean active; // Có thể đổi thành Boolean
 
     @Column(name = "videoCode", columnDefinition = "NVARCHAR(500)")
     private String videoCode;
 
+    // Quan hệ nhiều-một với Category
     @ManyToOne
     @JoinColumn(name = "categoryId")
+    // @ToString.Exclude là mẹo quan trọng: Ngăn chặn vòng lặp vô tận khi in log (Video gọi Category, Category gọi lại Video)
+    @ToString.Exclude 
     private Category category;
 
-    // =======================================================
-    // GETTER & SETTER THỦ CÔNG (Đảm bảo Thymeleaf đọc được)
-    // =======================================================
-
-    public String getVideoId() { return videoId; }
-    public void setVideoId(String videoId) { this.videoId = videoId; }
-
-    public String getTitle() { return title; }
-    public void setTitle(String title) { this.title = title; }
-
-    public String getPoster() { return poster; }
-    public void setPoster(String poster) { this.poster = poster; }
-
-    public String getDescription() { return description; }
-    public void setDescription(String description) { this.description = description; }
-
-    public int getViews() { return views; }
-    public void setViews(int views) { this.views = views; }
-
-    public boolean isActive() { return active; }
-    public void setActive(boolean active) { this.active = active; }
-
-    // ĐÂY LÀ CÁI QUAN TRỌNG NHẤT
-    public String getVideoCode() { return videoCode; }
-    public void setVideoCode(String videoCode) { this.videoCode = videoCode; }
-
-    public Category getCategory() { return category; }
-    public void setCategory(Category category) { this.category = category; }
 }

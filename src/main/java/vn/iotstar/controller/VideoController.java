@@ -4,94 +4,123 @@ import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
-import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Controller;
-import org.springframework.ui.Model;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.ModelAttribute;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*; // Dùng cho RestController
 import org.springframework.web.multipart.MultipartFile;
 
-import vn.iotstar.entity.Category;
 import vn.iotstar.entity.Video;
 import vn.iotstar.service.CategoryService;
-import vn.iotstar.service.IStorageService;
+import vn.iotstar.service.IStorageService; // Giả sử bạn có service này để lưu ảnh
 import vn.iotstar.service.VideoService;
 
-@Controller
-@RequestMapping("admin/videos")
+@RestController // Đổi từ @Controller sang @RestController
+@RequestMapping("/api/videos") // Đổi đường dẫn để phân biệt với web thường
 public class VideoController {
 
     @Autowired
     VideoService videoService;
 
     @Autowired
-    CategoryService categoryService; // Cần cái này để lấy danh sách Category
+    CategoryService categoryService;
 
     @Autowired
     IStorageService storageService;
 
-    // 1. Hiển thị danh sách Video
-    @GetMapping("")
-    public String list(Model model) {
-        List<Video> list = videoService.findAll();
-        model.addAttribute("videos", list);
-        return "admin/videos/video-list";
+    // 1. Lấy tất cả Video (Có phân trang & Sắp xếp)
+    @GetMapping
+    public ResponseEntity<Page<Video>> getAllVideos(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size,
+            @RequestParam(defaultValue = "title") String sortBy) {
+        
+        Pageable pageable = PageRequest.of(page, size, Sort.by(sortBy));
+        Page<Video> videos = videoService.findAll(pageable);
+        return ResponseEntity.ok(videos);
     }
 
-    // 2. Form Thêm mới
-    @GetMapping("add")
-    public String add(Model model) {
-        Video video = new Video();
-        video.setVideoId(UUID.randomUUID().toString().substring(0, 8)); // Tự sinh ID ngắn
-        model.addAttribute("video", video);
+    // 2. Tìm kiếm Video theo tiêu đề (Có phân trang)
+    @GetMapping("/search")
+    public ResponseEntity<Page<Video>> searchVideos(
+            @RequestParam String keyword,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size) {
         
-        // QUAN TRỌNG: Gửi danh sách Category sang View để làm Dropdown
-        model.addAttribute("categories", categoryService.findAll()); 
-        
-        return "admin/videos/video-addOrEdit";
+        Pageable pageable = PageRequest.of(page, size, Sort.by("title"));
+        Page<Video> videos = videoService.findByTitleContaining(keyword, pageable);
+        return ResponseEntity.ok(videos);
     }
 
-    // 3. Form Sửa
-    @GetMapping("edit/{id}")
-    public String edit(Model model, @PathVariable("id") String id) {
-        Optional<Video> opt = videoService.findById(id);
-        if (opt.isPresent()) {
-            model.addAttribute("video", opt.get());
-            model.addAttribute("categories", categoryService.findAll()); // Cũng phải gửi list category
-            return "admin/videos/video-addOrEdit";
+    // 3. Lấy chi tiết 1 video
+    @GetMapping("/{id}")
+    public ResponseEntity<Video> getVideoById(@PathVariable String id) {
+        Optional<Video> video = videoService.findById(id);
+        return video.map(ResponseEntity::ok)
+                    .orElseGet(() -> ResponseEntity.notFound().build());
+    }
+
+    // 4. Thêm mới Video (Upload ảnh Poster)
+    // Lưu ý: Dùng @RequestPart để nhận file và JSON cùng lúc
+    @PostMapping(consumes = { "multipart/form-data" })
+    public ResponseEntity<Video> createVideo(
+            @RequestPart("video") Video video,
+            @RequestPart(value = "posterFile", required = false) MultipartFile posterFile) {
+
+        // Tạo ID ngẫu nhiên nếu chưa có
+        if (video.getVideoId() == null || video.getVideoId().isEmpty()) {
+            video.setVideoId(UUID.randomUUID().toString().substring(0, 8));
         }
-        return "redirect:/admin/videos";
-    }
 
-    // 4. Lưu dữ liệu
-    @PostMapping("saveOrUpdate")
-    public String saveOrUpdate(Model model, @ModelAttribute("video") Video video,
-                               @RequestParam("posterFile") MultipartFile posterFile) {
-        
-        // Xử lý upload ảnh Poster
-        if (!posterFile.isEmpty()) {
+        // Xử lý upload ảnh
+        if (posterFile != null && !posterFile.isEmpty()) {
             UUID uuid = UUID.randomUUID();
             String fileName = storageService.getSorageFilename(posterFile, uuid.toString());
             storageService.store(posterFile, fileName);
             video.setPoster(fileName);
-        } else {
-            // Nếu không chọn ảnh mới, giữ ảnh cũ (Logic này cần xử lý kỹ hơn ở View input hidden)
-            // Tạm thời để đơn giản ta bỏ qua logic giữ ảnh cũ phức tạp, bạn có thể áp dụng giống Category
         }
-
-        videoService.save(video);
-        return "redirect:/admin/videos";
+        
+        Video savedVideo = videoService.save(video);
+        return ResponseEntity.ok(savedVideo);
     }
 
-    // 5. Xóa
-    @GetMapping("delete/{id}")
-    public String delete(@PathVariable("id") String id) {
+    // 5. Cập nhật Video
+    @PutMapping("/{id}")
+    public ResponseEntity<Video> updateVideo(
+            @PathVariable String id,
+            @RequestBody Video videoDetail) {
+        
+        Optional<Video> videoOpt = videoService.findById(id);
+        if (videoOpt.isEmpty()) {
+            return ResponseEntity.notFound().build();
+        }
+        Video video = videoOpt.get();
+        
+        // Cập nhật thông tin
+        video.setTitle(videoDetail.getTitle());
+        video.setDescription(videoDetail.getDescription());
+        video.setActive(videoDetail.isActive());
+        video.setViews(videoDetail.getViews());
+        video.setVideoCode(videoDetail.getVideoCode());
+        video.setCategory(videoDetail.getCategory());
+        
+        // Lưu ý: Ảnh poster thường cập nhật qua API riêng hoặc logic upload khác
+        // Ở đây cập nhật thông tin text trước.
+
+        Video updatedVideo = videoService.save(video);
+        return ResponseEntity.ok(updatedVideo);
+    }
+
+    // 6. Xóa Video
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> deleteVideo(@PathVariable String id) {
+        if (videoService.findById(id).isEmpty()) {
+            return ResponseEntity.notFound().build();
+        }
         videoService.deleteById(id);
-        return "redirect:/admin/videos";
+        return ResponseEntity.ok().build();
     }
 }

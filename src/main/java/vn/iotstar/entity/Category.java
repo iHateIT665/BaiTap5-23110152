@@ -1,10 +1,12 @@
 package vn.iotstar.entity;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 
 import java.io.Serializable;
 import java.util.List;
 
 import jakarta.persistence.*;
 import lombok.*;
+
 
 @AllArgsConstructor
 @NoArgsConstructor
@@ -31,6 +33,7 @@ public class Category implements Serializable {
     private int status; // Thêm trường này (1: Active, 0: Inactive)
 
     // Quan hệ: Một Category có nhiều Video
+    @JsonIgnore
     @OneToMany(mappedBy = "category", cascade = CascadeType.ALL)
     private List<Video> videos;
     
